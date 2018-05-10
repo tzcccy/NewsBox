@@ -1,6 +1,5 @@
 import FluentMySQL
 import Vapor
-import MailCore
 
 /// Called before your application initializes.
 public func configure(_ config: inout Config, _ env: inout Environment, _ services: inout Services) throws {
@@ -26,14 +25,6 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     services.register(databases)
     //let mysqlConfig = MySQLDatabaseConfig(hostname: "119.29.66.191", port: 3306, username: "pubgnewsbox", password: "0054321", database: "pubg_news_box")
     //services.register(mysqlConfig)
-
-    
-    /// Configure mail Server
-    let smtp = SMTP(hostname: "smtp.163.com",     // SMTP server address
-        email: "pubgnewsbox@163.com",     // username to login
-        password: "pubgnewsbox520")           // password to login
-    let mailconfig = Mailer.Config.smtp(smtp)
-    try Mailer(config: mailconfig, registerOn: &services)
     
     
     /// Configure migrations

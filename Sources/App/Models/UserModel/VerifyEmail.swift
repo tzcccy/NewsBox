@@ -7,8 +7,7 @@
 
 import Foundation
 import Vapor
-import MailCore
-
+import SwiftSMTP
 
 struct PUBGBoxEmail : Content{
     var email       :   String
@@ -17,8 +16,13 @@ struct PUBGBoxEmail : Content{
 
 
 fileprivate var emailDic = Dictionary<String,String>()
+/// Configure mail Server
+fileprivate let smtp = SMTP(hostname: "smtp.163.com",     // SMTP server address
+                            email: "pubgnewsbox@163.com",     // username to login
+                            password: "pubgnewsbox520")           // password to login
 
 
+fileprivate let PUBGNewsBoxMailAddress = Mail.User(name: "PUBG新闻盒子", email: "pubgnewsbox@163.com")
 /// check verify code
 extension PUBGBoxEmail{
     func checkVerifyCode() ->Bool{
@@ -29,6 +33,7 @@ extension PUBGBoxEmail{
             return false
         }
         if verifyCode == customVerifyCode {
+            emailDic[self.email] = nil
             return true
         }
         return false
@@ -36,25 +41,33 @@ extension PUBGBoxEmail{
 }
 
 extension PUBGBoxEmail{
-    static func sendEmailCode(_ email : String,_ req : Request)throws -> Future<Bool>{
+    static func sendEmailCode(_ email : String ) -> Bool{
         
         var verifyCode = emailDic[email]
         
         if verifyCode == nil{
             verifyCode = RandomString.sharedInstance.getRandomStringOfLength(length: 4)
-            emailDic[email] = verifyCode!
         }
-        
-        
-        let mail = Mailer.Message(from: "pubgnewsbox@163.com", to: email, subject: "欢迎注册PUBG新闻盒子", text: "您本次注册的验证码为\(verifyCode!)", html:nil)
-        return try req.mail.send(mail).map(to: Bool.self) { mailResult in
-            print(mailResult)
-            // ... Return your response for example
-            return true
-        }
-        
         ///catch result and return
+        let userMail = Mail.User(email: email)
         
+        let mail = Mail(
+            from: PUBGNewsBoxMailAddress,
+            to: [userMail],
+            subject: "欢迎注册PUBG新闻盒子",
+            text: "您本次注册的验证码为：\(verifyCode!)"
+        )
+        var result = true
+        smtp.send(mail) { (error) in
+            if let error = error {
+                print(error)
+                result = false
+            }else{
+                emailDic[email] = verifyCode!
+            }
+        }
+        
+        return result
     }
     
 }
