@@ -9,9 +9,12 @@ let package = Package(
 
         // 🖋🐬 Swift ORM (queries, models, relations, etc) built on MySQL.
         .package(url: "https://github.com/vapor/fluent-mysql.git", from: "3.0.0-rc"),
+        
+        /// mail Server
+        .package(url: "https://github.com/IBM-Swift/Swift-SMTP.git", from: "4.0.1")
     ],
     targets: [
-        .target(name: "App", dependencies: ["FluentMySQL", "Vapor"]),
+        .target(name: "App", dependencies: ["SwiftSMTP", "FluentMySQL", "Vapor"]),
         .target(name: "Run", dependencies: ["App"]),
         .testTarget(name: "AppTests", dependencies: ["App"])
     ]
