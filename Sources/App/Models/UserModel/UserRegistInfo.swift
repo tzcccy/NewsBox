@@ -19,6 +19,8 @@ enum UserRegistEnum : String {
 }
 
 
+
+
 final class UserRegistInfo : MySQLModel{
     static var entity = "user_regist_info"
     var id : Int?
@@ -61,10 +63,7 @@ extension UserRegistInfo{
             return .ok
         }
     }
-    
-    func encryptPassword() throws{
-            self.password = try SHA1.hash(self.password!).hexEncodedString()
-    }
+
 }
 
 extension UserRegistInfo : Migration { }
