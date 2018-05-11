@@ -85,6 +85,13 @@ extension AccessToken {
     /// 登陆操作
     public static func login(user : UserLoginInfo) -> AccessToken {
         let accessTokenStruct = AccessToken(username: user.username)
+        /// 清空之前的登陆信息
+        let oldaccessToken = usernameCache[user.username]
+        if oldaccessToken != nil {
+            accessTokenCache[oldaccessToken!] = nil
+            usernameCache[user.username] = nil
+        }
+        
         /// 第一步，缓存username to accesstoken
         usernameCache[user.username] = accessTokenStruct.accessToken
         /// 第二步，缓存accesstoken struct

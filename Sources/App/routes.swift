@@ -8,9 +8,14 @@ public func routes(_ router: Router) throws {
     }
 
     
+    
+    
     //用户数据
+    let userRouter = router.grouped("user")
     let userController = UserController()
     
-    router.post("register", use: userController.register)
-    router.post("getverifycode", use: userController.getVerifyCode)
+    userRouter.post("register", use: userController.register)
+    userRouter.post("getverifycode", use: userController.getVerifyCode)
+    userRouter.post("login", use: userController.login)
+    userRouter.post("logout", use: userController.logout)
 }
