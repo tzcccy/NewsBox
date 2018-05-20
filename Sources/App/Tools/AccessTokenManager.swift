@@ -21,13 +21,13 @@ enum AccessTokenStatusEnum : String {
 fileprivate var accessTokenCache = Dictionary<String,AccessToken>()
 /// username to accesstoken
 fileprivate var usernameCache = Dictionary<String,String>()
+
 func getAccessTokenCache() -> Dictionary<String,AccessToken> {
     return accessTokenCache
 }
 func getUsernameCache()->Dictionary<String,String> {
     return usernameCache
 }
-
 
 final class AccessToken : Content{
     var username        :   String
@@ -129,6 +129,12 @@ extension AccessToken {
         accessTokenCache[newAccessToken.accessToken] = newAccessToken
         
         return newAccessToken
+    }
+    
+    
+    /// 获取accessToken对应用户信息
+    public static func getUserNameByAccessToken(accessToken : String) -> String? {
+        return accessTokenCache[accessToken]?.username
     }
 }
 

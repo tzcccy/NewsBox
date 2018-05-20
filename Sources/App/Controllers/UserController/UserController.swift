@@ -115,4 +115,30 @@ final class UserController{
         }
     }
     
+    
+    func updateUserInfo(req : Request) throws -> Future<ResponseModel<String> >{
+        return try req.content.decode(RequestModel<UserInfo>.self).flatMap(){ requestBody in
+            return try requestBody.JudgeSercretKey(req: req).flatMap(){ result in
+                if !result {
+                    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -3, message: secretKeyError, data: nil))
+                }
+                //取对应session的username
+                guard let username = AccessToken.getUserNameByAccessToken(accessToken: requestBody.accessToken!) else{
+                    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -2, message: paramError, data: nil))
+                }
+                guard let userInfo = requestBody.data else {
+                    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: 0, message: "成功", data: nil))
+                }
+                userInfo.username = username
+                return try UserInfo.query(on: req).filter(\UserInfo.username == username).first().flatMap(){ orginUser in
+                    guard let orginUser = orginUser else{
+                        return userInfo.create(on: req).transform(to: ResponseModel<String>(status: 0, message: "成功", data: nil))
+                    }
+                    return userInfo.mergeUser(orginUser: orginUser).update(on: req).transform(to: ResponseModel<String>(status: 0, message: "成功", data: nil))
+                }
+            }
+
+        }
+    }
+    
 }

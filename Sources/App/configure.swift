@@ -33,6 +33,7 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     
     migrations.add(model: UserRegistInfo.self, database: .mysql)
     migrations.add(model: SercretKey.self, database: .mysql)
+    migrations.add(model: UserInfo.self, database: .mysql)
     /*-------------------------------*/
     services.register(migrations)
 
