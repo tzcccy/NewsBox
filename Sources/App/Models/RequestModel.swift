@@ -15,26 +15,28 @@ struct SercretKey : MySQLModel{
     var sercretkey : String
 }
 extension SercretKey : Migration{ }
-
-
-
-final class RequestModel<T> : Content where T : Content{
-    
-    var sercretkey : String
-    var timestamp : Int
-    var accessToken : String?
-    var data : T?
-}
-
-extension RequestModel{
-    
+extension SercretKey{
     /// 检查是否授权
-    func JudgeSercretKey(req : Request)throws -> Future<Bool>{
-        return try SercretKey.query(on: req).filter(\SercretKey.sercretkey == self.sercretkey).first().map(){result in
+    static func JudgeSercretKey(sercreKey : String,req : Request)throws -> Future<Bool>{
+        return try SercretKey.query(on: req).filter(\SercretKey.sercretkey == sercreKey).first().map(){result in
             if result == nil {
                 return false
             }
             return true
         }
+    }
+}
+
+
+final class RequestModel<T> : Content where T : Codable{
+    
+    var sercretkey : String
+    var timestamp : Int
+    var accessToken : String?
+    var data : T?
+    
+    init(sercretkey : String, timestamp : Int) {
+        self.sercretkey = sercretkey
+        self.timestamp = timestamp
     }
 }

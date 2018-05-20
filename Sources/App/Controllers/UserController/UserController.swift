@@ -8,18 +8,31 @@
 import Foundation
 import Vapor
 import FluentMySQL
-///
 
 fileprivate let paramError = "请求参数错误"
 fileprivate let secretKeyError = "App鉴权错误"
 
+/// 1.检查客户端密钥是否正确
+/// ```
+/// try SercretKey.JudgeSercretKey(sercreKey: requestBody.sercretkey,req: req).map(){result in
+/// if !result {
+///    return ResponseModel<String>(status: -3, message: secretKeyError, data: nil)
+/// }
+/// ```
+/// 2.检查用户登陆状态
+///```
+///let loginStatus = AccessToken.checkAccessToken(accessToken: requestBody.accessToken)
+///if .ok != loginStatus {
+///    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -1, message: loginStatus.rawValue, data: nil))
+///}
+///```
 final class UserController{
 
     /// 用户注册
     func register(req : Request)throws -> Future<ResponseModel<UserRegistInfo> >{
         return try req.content.decode(RequestModel<UserRegistInfo>.self).flatMap(){ requestBody in
             
-            return try requestBody.JudgeSercretKey(req: req).flatMap(){result in
+            return try SercretKey.JudgeSercretKey(sercreKey: requestBody.sercretkey,req: req).flatMap(){result in
                 if !result {
                     return req.eventLoop.newSucceededFuture(result: ResponseModel<UserRegistInfo>(status: -3, message: secretKeyError, data: nil))
                 }
@@ -49,7 +62,7 @@ final class UserController{
     func getVerifyCode(req : Request)throws ->Future<ResponseModel<String> >{
         return try req.content.decode(RequestModel<PUBGBoxEmail>.self).flatMap { requestBody in
             
-            return try requestBody.JudgeSercretKey(req: req).map(){result in
+            return try SercretKey.JudgeSercretKey(sercreKey: requestBody.sercretkey,req: req).map(){result in
                 if !result {
                     return ResponseModel<String>(status: -3, message: secretKeyError, data: nil)
                 }
@@ -75,7 +88,7 @@ final class UserController{
         return try req.content.decode(RequestModel<UserLoginInfo>.self).flatMap(){requestBody in
             
             
-            return try requestBody.JudgeSercretKey(req: req).flatMap(){result in
+            return try SercretKey.JudgeSercretKey(sercreKey: requestBody.sercretkey,req: req).flatMap(){result in
                 if !result {
                     return req.eventLoop.newSucceededFuture(result: ResponseModel<AccessToken>(status: -3, message: secretKeyError, data: nil))
                 }
@@ -101,7 +114,9 @@ final class UserController{
     func logout(req : Request)throws -> Future<ResponseModel<String> > {
         return try req.content.decode(RequestModel<String>.self).flatMap(){
             requestBody in
-            return try requestBody.JudgeSercretKey(req: req).map(){ result in
+            return try SercretKey.JudgeSercretKey(sercreKey: requestBody.sercretkey,req: req).map(){result in
+                
+                //1.检查客户端密钥是否正确
                 if !result {
                     return ResponseModel<String>(status: -3, message: secretKeyError, data: nil)
                 }
@@ -115,16 +130,23 @@ final class UserController{
         }
     }
     
-    
+    /// 更新用户信息
     func updateUserInfo(req : Request) throws -> Future<ResponseModel<String> >{
         return try req.content.decode(RequestModel<UserInfo>.self).flatMap(){ requestBody in
-            return try requestBody.JudgeSercretKey(req: req).flatMap(){ result in
+            return try SercretKey.JudgeSercretKey(sercreKey: requestBody.sercretkey,req: req).flatMap(){result in
                 if !result {
                     return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -3, message: secretKeyError, data: nil))
                 }
-                //取对应session的username
+                
+                let loginStatus = AccessToken.checkAccessToken(accessToken: requestBody.accessToken)
+                if .ok != loginStatus {
+                    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -1, message: loginStatus.rawValue, data: nil))
+                }
+                
+                
+                
                 guard let username = AccessToken.getUserNameByAccessToken(accessToken: requestBody.accessToken!) else{
-                    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -2, message: paramError, data: nil))
+                    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -4, message: "用户未登录", data: nil))
                 }
                 guard let userInfo = requestBody.data else {
                     return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: 0, message: "成功", data: nil))
@@ -138,6 +160,31 @@ final class UserController{
                 }
             }
 
+        }
+    }
+    
+    /// 更新用户头像
+    func updateUserHeadPicture(req : Request) throws -> Future<ResponseModel<String> >{
+        return try req.content.decode(RequestModel<File>.self).flatMap(){ requestBody in
+            /// 判断app密钥
+            return try SercretKey.JudgeSercretKey(sercreKey: requestBody.sercretkey,req: req).flatMap(){result in
+                if !result {
+                    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -3, message: secretKeyError, data: nil))
+                }
+                /// 判断用户登陆状态
+                let loginStatus = AccessToken.checkAccessToken(accessToken: requestBody.accessToken)
+                if .ok != loginStatus {
+                    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -1, message: loginStatus.rawValue, data: nil))
+                }
+                /// 处理本逻辑
+                guard let file = requestBody.data else {
+                    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -2, message: paramError, data: nil))
+                }
+                print(file)
+                let filePath:String = NSHomeDirectory() + "Public"
+                print(filePath)
+                return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -2, message: paramError, data: nil))
+            }
         }
     }
     

@@ -56,9 +56,9 @@ extension AccessToken {
     fileprivate func checkTimeOut() -> Bool {
         let nowInterval = Int(Date().timeIntervalSince1970)
         if nowInterval > createTime + expireIn {
-            return false
-        }else {
             return true
+        }else {
+            return false
         }
     }
     
@@ -125,7 +125,7 @@ extension AccessToken {
         let newAccessToken = AccessToken(username: username)
         // 刷新username缓存
         usernameCache[username] = newAccessToken.accessToken
-        // 刷新啊冲厕所是T哦啃缓存
+        // 刷新accessToken缓存
         accessTokenCache[newAccessToken.accessToken] = newAccessToken
         
         return newAccessToken
