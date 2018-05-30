@@ -62,19 +62,21 @@ final class UserController{
     func getVerifyCode(req : Request)throws ->Future<ResponseModel<String> >{
         return try req.content.decode(RequestModel<PUBGBoxEmail>.self).flatMap { requestBody in
             
-            return try SercretKey.JudgeSercretKey(sercreKey: requestBody.sercretkey,req: req).map(){result in
+            return try SercretKey.JudgeSercretKey(sercreKey: requestBody.sercretkey,req: req).flatMap(){result in
                 if !result {
-                    return ResponseModel<String>(status: -3, message: secretKeyError, data: nil)
+                    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -3, message: secretKeyError, data: nil))
                 }
                 
                 guard let mail = requestBody.data else {
-                    return ResponseModel<String>(status: -2, message: paramError, data: nil)
+                    return req.eventLoop.newSucceededFuture(result: ResponseModel<String>(status: -2, message: paramError, data: nil))
                 }
-                let sendEmailResult = PUBGBoxEmail.sendEmailCode(mail.email)
-                if sendEmailResult {
-                    return ResponseModel<String>(status: 0, message: "发送验证码成功", data: nil)
+                return PUBGBoxEmail.sendEmailCode(req: req, email: mail.email).map(){ sendEmailResult in
+                    if sendEmailResult {
+                        return ResponseModel<String>(status: 0, message: "发送验证码成功", data: nil)
+                    }
+                    return ResponseModel<String>(status: -1, message: "发送验证码失败", data: nil)
                 }
-                return ResponseModel<String>(status: -1, message: "发送验证码失败", data: nil)
+                
             }
             
             

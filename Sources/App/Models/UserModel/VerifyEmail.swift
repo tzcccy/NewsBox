@@ -41,7 +41,7 @@ extension PUBGBoxEmail{
 }
 
 extension PUBGBoxEmail{
-    static func sendEmailCode(_ email : String ) -> Bool{
+    static func sendEmailCode(req : Request, email : String ) -> Future<Bool>{
         
         var verifyCode = emailDic[email]
         
@@ -57,17 +57,18 @@ extension PUBGBoxEmail{
             subject: "欢迎注册PUBG新闻盒子",
             text: "您本次注册的验证码为：\(verifyCode!)"
         )
-        var result = true
+        let result = req.eventLoop.newPromise(Bool.self)
         smtp.send(mail) { (error) in
             if let error = error {
                 print(error)
-                result = false
+                result.succeed(result: false)
             }else{
                 emailDic[email] = verifyCode!
+                result.succeed(result: true)
             }
         }
         
-        return result
+        return result.futureResult
     }
     
 }
